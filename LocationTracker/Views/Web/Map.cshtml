@@ -1,0 +1,65 @@
+﻿@using LocationTracker.Providers
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<title>@ViewBag.Title</title>
+<fieldset>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <div id="map" style="height:800px;width:100%;vertical-align:center" align="center"></div>
+    <script>  
+        let map, marker, latLng, user;
+        
+        var intervalId = window.setInterval(function() { loadLastLocationForUser(user) }, 10000)
+        
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 0, lng: 0 },
+            zoom: 4
+            });
+        }
+        
+        function loadLastLocationForUser(newUser) {
+            if (newUser == null) return
+            user = newUser;
+            $.get('@Url.Action("Location", "Web")', {username: user}, function (data) {
+                latLng = new google.maps.LatLng(data.Latitude,data.Longitude);
+               if (marker != null) { 
+                   marker.setMap(null) 
+               } 
+               
+               marker = new google.maps.Marker({ position: latLng, map: map, visible: true }) 
+                             
+               marker.setPosition(latLng);
+            }, 'json');
+        }
+        
+        function animatedMove(marker, t, current, moveto) {
+
+          var deltalat = (moveto.lat() - current.lat()) / 100;
+          var deltalng = (moveto.lng() - current.lng()) / 100;
+
+          var delay = 10 * t;
+          for (var i = 0; i < 100; i++) {
+            (function(ind) {
+              setTimeout(
+                function() {
+                  var lat = marker.position.lat();
+                  var lng = marker.position.lng();
+                  lat += deltalat;
+                  lng += deltalng;
+                  latlng = new google.maps.LatLng(lat, lng);
+                  marker.setPosition(latlng);
+                }, delay * ind
+              );
+            })(i)
+          }
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyVsD6znmNjtKXF50shNNkJilZSwJLqX0&callback=initMap"></script>
+</fieldset>
